@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useRef } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import Image from 'next/image'
 import { AnimatePresence, motion } from 'framer-motion'
 import { X } from 'lucide-react'
@@ -35,6 +35,8 @@ export function EchoChatbot({
   const scrollRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
+  const [isServerLoading, setIsServerLoading] = useState(false)
+
   const handleClose = useCallback(() => {
     onClose()
   }, [onClose])
@@ -44,7 +46,9 @@ export function EchoChatbot({
     onClose()
   }, [resetChat, onClose])
 
-  // Scroll to the newest message
+  /*
+   * Scroll to the newest message.
+   */
   const scrollToBottom = useCallback(
     (behavior: ScrollBehavior = 'smooth') => {
       const container = scrollRef.current
@@ -59,6 +63,27 @@ export function EchoChatbot({
     [],
   )
 
+  /*
+   * Send the message and show loading while the server responds.
+   */
+  const handleSendUserMessage = useCallback(
+    async (message: string) => {
+      setIsServerLoading(true)
+
+      try {
+        await sendUserMessage(message)
+      } catch (error) {
+        console.error('Error sending grievance:', error)
+      } finally {
+        setIsServerLoading(false)
+      }
+    },
+    [sendUserMessage],
+  )
+
+  /*
+   * Scroll to the newest message whenever chat content changes.
+   */
   useEffect(() => {
     if (!open) return
 
@@ -69,11 +94,21 @@ export function EchoChatbot({
     return () => {
       window.clearTimeout(timer)
     }
-  }, [open, messages, isTyping, phase, scrollToBottom])
+  }, [
+    open,
+    messages,
+    isTyping,
+    isServerLoading,
+    phase,
+    analysis,
+    scrollToBottom,
+  ])
 
-  // Focus the input after ECHO finishes typing
+  /*
+   * Focus the input after ECHO finishes typing.
+   */
   useEffect(() => {
-    if (!isTyping && isCollecting && open) {
+    if (!isTyping && !isServerLoading && isCollecting && open) {
       const timer = window.setTimeout(() => {
         inputRef.current?.focus()
         scrollToBottom('auto')
@@ -85,34 +120,34 @@ export function EchoChatbot({
     }
   }, [
     isTyping,
+    isServerLoading,
     isCollecting,
     phase,
     open,
     scrollToBottom,
   ])
 
-  // Lock body scroll while chatbot is open
+  /*
+   * Lock body scroll while chatbot is open.
+   */
   useEffect(() => {
     if (!open) return
 
     const previousOverflow = document.body.style.overflow
-    const previousTouchAction = document.body.style.touchAction
 
     document.body.style.overflow = 'hidden'
-    document.body.style.touchAction = 'none'
 
-    const onKey = (event: KeyboardEvent) => {
+    const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         handleClose()
       }
     }
 
-    window.addEventListener('keydown', onKey)
+    window.addEventListener('keydown', handleKeyDown)
 
     return () => {
       document.body.style.overflow = previousOverflow
-      document.body.style.touchAction = previousTouchAction
-      window.removeEventListener('keydown', onKey)
+      window.removeEventListener('keydown', handleKeyDown)
     }
   }, [open, handleClose])
 
@@ -156,9 +191,21 @@ export function EchoChatbot({
           onClick={handleClose}
         >
           <motion.div
-            initial={{ opacity: 0, y: 30, scale: 0.98 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 30, scale: 0.98 }}
+            initial={{
+              opacity: 0,
+              y: 30,
+              scale: 0.98,
+            }}
+            animate={{
+              opacity: 1,
+              y: 0,
+              scale: 1,
+            }}
+            exit={{
+              opacity: 0,
+              y: 30,
+              scale: 0.98,
+            }}
             transition={{
               duration: 0.4,
               ease: [0.22, 1, 0.36, 1],
@@ -185,7 +232,7 @@ export function EchoChatbot({
           >
             {/* Scanline accent */}
             <div
-              aria-hidden
+              aria-hidden="true"
               className="
                 pointer-events-none
                 absolute
@@ -336,7 +383,47 @@ export function EchoChatbot({
                 />
               ))}
 
-              {isTyping && (
+              {/* Server loading indicator */}
+              {isServerLoading && (
+                <div className="flex justify-start">
+                  <div
+                    className="
+                      flex
+                      items-center
+                      gap-3
+                      rounded-2xl
+                      border
+                      border-cyan/20
+                      bg-cyan/5
+                      px-4
+                      py-3
+                      text-sm
+                      text-cyan
+                    "
+                    role="status"
+                    aria-live="polite"
+                  >
+                    <span
+                      className="
+                        h-4
+                        w-4
+                        animate-spin
+                        rounded-full
+                        border-2
+                        border-cyan/30
+                        border-t-cyan
+                      "
+                    />
+
+                    <span>
+                      Connecting to ECHO server...
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              {/* Normal typing indicator */}
+              {isTyping && !isServerLoading && (
                 <div className="flex justify-start">
                   <TypingIndicator />
                 </div>
@@ -375,9 +462,13 @@ export function EchoChatbot({
               >
                 <ChatInput
                   ref={inputRef}
-                  onSend={sendUserMessage}
-                  disabled={isTyping}
-                  placeholder={placeholder}
+                  onSend={handleSendUserMessage}
+                  disabled={isTyping || isServerLoading}
+                  placeholder={
+                    isServerLoading
+                      ? 'Waiting for server...'
+                      : placeholder
+                  }
                 />
               </div>
             )}
