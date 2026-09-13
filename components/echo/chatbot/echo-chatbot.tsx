@@ -44,7 +44,7 @@ export function EchoChatbot({
     onClose()
   }, [resetChat, onClose])
 
-  // Scroll to the newest message
+  // Scroll only the messages container
   const scrollToBottom = useCallback(
     (behavior: ScrollBehavior = 'smooth') => {
       const container = scrollRef.current
@@ -59,6 +59,7 @@ export function EchoChatbot({
     [],
   )
 
+  // Scroll to the newest message
   useEffect(() => {
     if (!open) return
 
@@ -69,36 +70,34 @@ export function EchoChatbot({
     return () => {
       window.clearTimeout(timer)
     }
-  }, [open, messages, isTyping, phase, scrollToBottom])
-
-  // Focus the input after ECHO finishes typing
-  useEffect(() => {
-    if (!isTyping && isCollecting && open) {
-      const timer = window.setTimeout(() => {
-        inputRef.current?.focus()
-        scrollToBottom('auto')
-      }, 150)
-
-      return () => {
-        window.clearTimeout(timer)
-      }
-    }
   }, [
-    isTyping,
-    isCollecting,
-    phase,
     open,
+    messages,
+    isTyping,
+    phase,
     scrollToBottom,
   ])
 
-  // Lock body scroll while chatbot is open
+  /*
+   * Do not automatically focus the input here.
+   * Automatic focus makes mobile browsers move the complete
+   * chatbot upward when the keyboard opens.
+   *
+   * The user can tap the input manually.
+   */
+
+  // Lock the background page while the chatbot is open
   useEffect(() => {
     if (!open) return
 
     const previousOverflow = document.body.style.overflow
+    const previousPosition = document.body.style.position
+    const previousWidth = document.body.style.width
     const previousTouchAction = document.body.style.touchAction
 
     document.body.style.overflow = 'hidden'
+    document.body.style.position = 'fixed'
+    document.body.style.width = '100%'
     document.body.style.touchAction = 'none'
 
     const onKey = (event: KeyboardEvent) => {
@@ -111,7 +110,10 @@ export function EchoChatbot({
 
     return () => {
       document.body.style.overflow = previousOverflow
+      document.body.style.position = previousPosition
+      document.body.style.width = previousWidth
       document.body.style.touchAction = previousTouchAction
+
       window.removeEventListener('keydown', onKey)
     }
   }, [open, handleClose])
@@ -283,6 +285,7 @@ export function EchoChatbot({
                 </div>
               </div>
 
+              {/* Close button */}
               <button
                 type="button"
                 onClick={handleClose}
@@ -310,7 +313,7 @@ export function EchoChatbot({
               </button>
             </header>
 
-            {/* Messages */}
+            {/* Messages: only this area scrolls */}
             <div
               ref={scrollRef}
               className="
@@ -322,6 +325,7 @@ export function EchoChatbot({
                 overflow-x-hidden
                 overflow-y-auto
                 overscroll-contain
+                touch-pan-y
                 px-4
                 py-5
                 [scrollbar-width:thin]
@@ -359,7 +363,7 @@ export function EchoChatbot({
               )}
             </div>
 
-            {/* Input area */}
+            {/* Input area: fixed inside chatbot */}
             {isCollecting && (
               <div
                 className="
