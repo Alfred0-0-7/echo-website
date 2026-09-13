@@ -59,7 +59,7 @@ export function EchoChatbot({
     [],
   )
 
-  // Scroll to the newest message
+  // Scroll only the chat messages
   useEffect(() => {
     if (!open) return
 
@@ -78,27 +78,25 @@ export function EchoChatbot({
     scrollToBottom,
   ])
 
-  /*
-   * Do not automatically focus the input here.
-   * Automatic focus makes mobile browsers move the complete
-   * chatbot upward when the keyboard opens.
-   *
-   * The user can tap the input manually.
-   */
-
-  // Lock the background page while the chatbot is open
+  // Lock the background page while chatbot is open
   useEffect(() => {
     if (!open) return
 
-    const previousOverflow = document.body.style.overflow
-    const previousPosition = document.body.style.position
-    const previousWidth = document.body.style.width
-    const previousTouchAction = document.body.style.touchAction
+    const body = document.body
+    const html = document.documentElement
 
-    document.body.style.overflow = 'hidden'
-    document.body.style.position = 'fixed'
-    document.body.style.width = '100%'
-    document.body.style.touchAction = 'none'
+    const previousBodyOverflow = body.style.overflow
+    const previousBodyPosition = body.style.position
+    const previousBodyWidth = body.style.width
+    const previousBodyTouchAction = body.style.touchAction
+    const previousHtmlOverflow = html.style.overflow
+
+    html.style.overflow = 'hidden'
+
+    body.style.overflow = 'hidden'
+    body.style.position = 'fixed'
+    body.style.width = '100%'
+    body.style.touchAction = 'none'
 
     const onKey = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
@@ -109,10 +107,12 @@ export function EchoChatbot({
     window.addEventListener('keydown', onKey)
 
     return () => {
-      document.body.style.overflow = previousOverflow
-      document.body.style.position = previousPosition
-      document.body.style.width = previousWidth
-      document.body.style.touchAction = previousTouchAction
+      html.style.overflow = previousHtmlOverflow
+
+      body.style.overflow = previousBodyOverflow
+      body.style.position = previousBodyPosition
+      body.style.width = previousBodyWidth
+      body.style.touchAction = previousBodyTouchAction
 
       window.removeEventListener('keydown', onKey)
     }
@@ -169,8 +169,8 @@ export function EchoChatbot({
             className="
               relative
               flex
-              h-[100svh]
-              max-h-[100svh]
+              h-[100vh]
+              max-h-[100vh]
               w-full
               max-w-2xl
               min-h-0
@@ -211,7 +211,7 @@ export function EchoChatbot({
             <header
               className="
                 relative
-                z-20
+                z-40
                 flex
                 shrink-0
                 items-center
@@ -292,7 +292,7 @@ export function EchoChatbot({
                 aria-label="Close signal channel"
                 className="
                   relative
-                  z-30
+                  z-50
                   inline-flex
                   h-10
                   w-10
@@ -313,7 +313,7 @@ export function EchoChatbot({
               </button>
             </header>
 
-            {/* Messages: only this area scrolls */}
+            {/* Messages: this is the only scrolling area */}
             <div
               ref={scrollRef}
               className="
@@ -328,9 +328,11 @@ export function EchoChatbot({
                 touch-pan-y
                 px-4
                 py-5
+                pb-28
                 [scrollbar-width:thin]
                 sm:px-5
                 sm:py-6
+                sm:pb-28
               "
             >
               {messages.map((message) => (
@@ -363,17 +365,18 @@ export function EchoChatbot({
               )}
             </div>
 
-            {/* Input area: fixed inside chatbot */}
+            {/* Input area: overlays the messages and stays at the bottom */}
             {isCollecting && (
               <div
                 className="
-                  relative
+                  absolute
+                  bottom-0
+                  left-0
+                  right-0
                   z-30
-                  shrink-0
                   border-t
                   border-cyan/15
                   bg-background/95
-                  pb-[env(safe-area-inset-bottom)]
                   shadow-[0_-8px_24px_rgba(0,0,0,0.18)]
                 "
               >
@@ -390,14 +393,15 @@ export function EchoChatbot({
             {phase === 'submitted' && (
               <div
                 className="
-                  relative
+                  absolute
+                  bottom-0
+                  left-0
+                  right-0
                   z-30
-                  shrink-0
                   border-t
                   border-cyan/15
                   bg-background/95
                   p-3
-                  pb-[calc(0.75rem+env(safe-area-inset-bottom))]
                 "
               >
                 <button
