@@ -43,17 +43,15 @@
 :root {
   color-scheme: dark;
 
-  /* near-black graphite */
   --background: oklch(0.16 0.015 260);
   --foreground: oklch(0.96 0.008 240);
 
-  /* deep navy surfaces */
   --card: oklch(0.21 0.03 262);
   --card-foreground: oklch(0.96 0.008 240);
+
   --popover: oklch(0.19 0.028 262);
   --popover-foreground: oklch(0.96 0.008 240);
 
-  /* electric cyan */
   --primary: oklch(0.82 0.14 205);
   --primary-foreground: oklch(0.15 0.02 260);
 
@@ -63,7 +61,6 @@
   --muted: oklch(0.24 0.03 264);
   --muted-foreground: oklch(0.68 0.03 250);
 
-  /* blue-violet */
   --accent: oklch(0.6 0.18 278);
   --accent-foreground: oklch(0.98 0.005 240);
 
@@ -75,7 +72,6 @@
 
   --radius: 0.625rem;
 
-  /* raw brand colors */
   --cyan: oklch(0.82 0.14 205);
   --violet: oklch(0.6 0.18 278);
   --navy: oklch(0.21 0.03 262);
@@ -86,14 +82,17 @@
   * {
     @apply border-border;
   }
+
   body {
     @apply bg-background text-foreground font-sans antialiased;
     -webkit-font-smoothing: antialiased;
   }
+
   ::selection {
     background: color-mix(in oklch, var(--cyan) 40%, transparent);
     color: var(--foreground);
   }
+
   html {
     scroll-behavior: smooth;
   }
@@ -103,6 +102,7 @@
   html {
     scroll-behavior: auto;
   }
+
   *,
   *::before,
   *::after {
@@ -125,8 +125,15 @@
 
 @utility grid-noise {
   background-image:
-    linear-gradient(color-mix(in oklch, var(--cyan) 6%, transparent) 1px, transparent 1px),
-    linear-gradient(90deg, color-mix(in oklch, var(--cyan) 6%, transparent) 1px, transparent 1px);
+    linear-gradient(
+      color-mix(in oklch, var(--cyan) 6%, transparent) 1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      90deg,
+      color-mix(in oklch, var(--cyan) 6%, transparent) 1px,
+      transparent 1px
+    );
   background-size: 46px 46px;
 }
 
@@ -136,6 +143,7 @@
     opacity: 0.5;
     transform: scale(1);
   }
+
   50% {
     opacity: 1;
     transform: scale(1.06);
@@ -146,6 +154,7 @@
   from {
     transform: rotate(0deg);
   }
+
   to {
     transform: rotate(360deg);
   }
@@ -156,6 +165,7 @@
     transform: scale(0.2);
     opacity: 0.9;
   }
+
   100% {
     transform: scale(1.8);
     opacity: 0;
@@ -166,11 +176,16 @@
   0% {
     transform: translateY(-100%);
   }
+
   100% {
     transform: translateY(100%);
   }
 }
-/* Mobile keyboard and chatbot layout fix */
+
+/* =========================================================
+   ECHO MOBILE KEYBOARD AND CHATBOT LAYOUT FIX
+   ========================================================= */
+
 html,
 body {
   width: 100%;
@@ -179,45 +194,62 @@ body {
   padding: 0;
 }
 
-body {
-  overflow: hidden;
-  overscroll-behavior: none;
-}
+/* Do not globally lock body scrolling.
+   EchoChatbot already locks it when the modal opens. */
 
-/* Main chatbot wrapper */
 .chat-shell {
   width: 100%;
   height: 100dvh;
+  max-height: 100dvh;
   min-height: 0;
   display: flex;
   flex-direction: column;
   overflow: hidden;
 }
 
-/* Fixed header */
 .chat-header {
   flex: 0 0 auto;
   position: relative;
   z-index: 20;
 }
 
-/* Only the message area scrolls */
 .chat-messages {
   flex: 1 1 auto;
   min-height: 0;
-  overflow-y: auto;
   overflow-x: hidden;
+  overflow-y: auto;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
 }
 
-/* Input stays at the bottom */
 .chat-input-area {
   flex: 0 0 auto;
   position: relative;
-  z-index: 20;
+  z-index: 50;
+  width: 100%;
+  background: var(--background);
   padding-bottom: max(
     12px,
     env(safe-area-inset-bottom)
   );
+}
+
+/* Mobile layout */
+@media (max-width: 640px) {
+  .chat-shell {
+    height: 100dvh;
+    max-height: 100dvh;
+    border-radius: 0;
+  }
+
+  .chat-messages {
+    padding-bottom: 8px;
+  }
+
+  .chat-input-area {
+    padding-bottom: max(
+      12px,
+      env(safe-area-inset-bottom)
+    );
+  }
 }
