@@ -44,7 +44,7 @@ export function EchoChatbot({
     onClose()
   }, [resetChat, onClose])
 
-  // Scroll only the messages container
+  // Scroll only the messages area
   const scrollToBottom = useCallback(
     (behavior: ScrollBehavior = 'smooth') => {
       const container = scrollRef.current
@@ -59,7 +59,6 @@ export function EchoChatbot({
     [],
   )
 
-  // Scroll only the chat messages
   useEffect(() => {
     if (!open) return
 
@@ -78,7 +77,7 @@ export function EchoChatbot({
     scrollToBottom,
   ])
 
-  // Lock the background page while chatbot is open
+  // Prevent the background page from scrolling
   useEffect(() => {
     if (!open) return
 
@@ -136,20 +135,18 @@ export function EchoChatbot({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.3 }}
+          transition={{ duration: 0.25 }}
           className="
             fixed
             inset-0
-            z-[999]
-            flex
-            items-start
-            justify-center
+            z-[9999]
             overflow-hidden
             overscroll-none
             bg-background/80
             p-0
-            backdrop-blur-md
+            sm:flex
             sm:items-center
+            sm:justify-center
             sm:p-4
           "
           role="dialog"
@@ -158,31 +155,32 @@ export function EchoChatbot({
           onClick={handleClose}
         >
           <motion.div
-            initial={{ opacity: 0, y: 30, scale: 0.98 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 30, scale: 0.98 }}
+            initial={{ opacity: 0, scale: 0.98 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.98 }}
             transition={{
-              duration: 0.4,
+              duration: 0.25,
               ease: [0.22, 1, 0.36, 1],
             }}
             onClick={(event) => event.stopPropagation()}
             className="
               relative
               flex
-              h-[100vh]
-              max-h-[100vh]
+              h-screen
+              max-h-screen
               w-full
-              max-w-2xl
               min-h-0
               flex-col
               overflow-hidden
               overscroll-none
-              border
-              border-cyan/20
-              bg-background/95
+              bg-background
               sm:h-[85vh]
               sm:max-h-[85vh]
+              sm:max-w-2xl
               sm:rounded-3xl
+              sm:border
+              sm:border-cyan/20
+              sm:bg-background/95
             "
           >
             {/* Scanline accent */}
@@ -207,21 +205,22 @@ export function EchoChatbot({
               />
             </div>
 
-            {/* Header */}
+            {/* Header - always fixed at the top */}
             <header
               className="
                 relative
-                z-40
+                z-50
                 flex
+                h-auto
                 shrink-0
                 items-center
                 justify-between
                 border-b
                 border-cyan/15
-                bg-card/40
+                bg-card
                 px-4
                 py-3
-                backdrop-blur
+                sm:bg-card/40
                 sm:px-5
                 sm:py-4
               "
@@ -285,14 +284,13 @@ export function EchoChatbot({
                 </div>
               </div>
 
-              {/* Close button */}
               <button
                 type="button"
                 onClick={handleClose}
                 aria-label="Close signal channel"
                 className="
                   relative
-                  z-50
+                  z-[60]
                   inline-flex
                   h-10
                   w-10
@@ -313,7 +311,7 @@ export function EchoChatbot({
               </button>
             </header>
 
-            {/* Messages: this is the only scrolling area */}
+            {/* Messages - ONLY THIS AREA SCROLLS */}
             <div
               ref={scrollRef}
               className="
@@ -325,14 +323,13 @@ export function EchoChatbot({
                 overflow-x-hidden
                 overflow-y-auto
                 overscroll-contain
-                touch-pan-y
                 px-4
                 py-5
-                pb-28
+                pb-32
+                touch-pan-y
                 [scrollbar-width:thin]
                 sm:px-5
                 sm:py-6
-                sm:pb-28
               "
             >
               {messages.map((message) => (
@@ -365,7 +362,7 @@ export function EchoChatbot({
               )}
             </div>
 
-            {/* Input area: overlays the messages and stays at the bottom */}
+            {/* Input - stays at the bottom and overlays the messages */}
             {isCollecting && (
               <div
                 className="
@@ -373,11 +370,12 @@ export function EchoChatbot({
                   bottom-0
                   left-0
                   right-0
-                  z-30
+                  z-40
+                  shrink-0
                   border-t
                   border-cyan/15
-                  bg-background/95
-                  shadow-[0_-8px_24px_rgba(0,0,0,0.18)]
+                  bg-background
+                  shadow-[0_-8px_24px_rgba(0,0,0,0.25)]
                 "
               >
                 <ChatInput
@@ -397,10 +395,10 @@ export function EchoChatbot({
                   bottom-0
                   left-0
                   right-0
-                  z-30
+                  z-40
                   border-t
                   border-cyan/15
-                  bg-background/95
+                  bg-background
                   p-3
                 "
               >
