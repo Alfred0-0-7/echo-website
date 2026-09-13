@@ -36,6 +36,8 @@ export function EchoChatbot({
   const inputRef = useRef<HTMLInputElement>(null)
 
   const [isServerLoading, setIsServerLoading] = useState(false)
+  const [mobileViewportHeight, setMobileViewportHeight] =
+    useState<number | null>(null)
 
   const handleClose = useCallback(() => {
     onClose()
@@ -45,6 +47,47 @@ export function EchoChatbot({
     resetChat()
     onClose()
   }, [resetChat, onClose])
+
+  /*
+   * Detect the visible mobile viewport.
+   *
+   * When the mobile keyboard opens, visualViewport.height becomes
+   * smaller than the normal browser viewport height.
+   */
+  useEffect(() => {
+    if (!open) return
+
+    const updateViewportHeight = () => {
+      const viewport = window.visualViewport
+
+      if (!viewport) {
+        setMobileViewportHeight(null)
+        return
+      }
+
+      const isMobile = window.innerWidth < 640
+
+      if (isMobile) {
+        setMobileViewportHeight(viewport.height)
+      } else {
+        setMobileViewportHeight(null)
+      }
+    }
+
+    updateViewportHeight()
+
+    const viewport = window.visualViewport
+
+    viewport?.addEventListener('resize', updateViewportHeight)
+    viewport?.addEventListener('scroll', updateViewportHeight)
+    window.addEventListener('resize', updateViewportHeight)
+
+    return () => {
+      viewport?.removeEventListener('resize', updateViewportHeight)
+      viewport?.removeEventListener('scroll', updateViewportHeight)
+      window.removeEventListener('resize', updateViewportHeight)
+    }
+  }, [open])
 
   /*
    * Scroll to the newest message.
@@ -82,14 +125,15 @@ export function EchoChatbot({
   )
 
   /*
-   * Scroll to the newest message whenever chat content changes.
+   * Scroll whenever messages, typing state, analysis, or viewport
+   * height changes.
    */
   useEffect(() => {
     if (!open) return
 
     const timer = window.setTimeout(() => {
       scrollToBottom('auto')
-    }, 50)
+    }, 80)
 
     return () => {
       window.clearTimeout(timer)
@@ -101,6 +145,7 @@ export function EchoChatbot({
     isServerLoading,
     phase,
     analysis,
+    mobileViewportHeight,
     scrollToBottom,
   ])
 
@@ -108,7 +153,12 @@ export function EchoChatbot({
    * Focus the input after ECHO finishes typing.
    */
   useEffect(() => {
-    if (!isTyping && !isServerLoading && isCollecting && open) {
+    if (
+      !isTyping &&
+      !isServerLoading &&
+      isCollecting &&
+      open
+    ) {
       const timer = window.setTimeout(() => {
         inputRef.current?.focus()
         scrollToBottom('auto')
@@ -128,7 +178,8 @@ export function EchoChatbot({
   ])
 
   /*
-   * Lock body scroll while chatbot is open.
+   * Lock the background page while the chatbot is open.
+   * Do not disable touch scrolling because the messages need to scroll.
    */
   useEffect(() => {
     if (!open) return
@@ -214,8 +265,8 @@ export function EchoChatbot({
             className="
               relative
               flex
-              h-[100svh]
-              max-h-[100svh]
+              h-[100dvh]
+              max-h-[100dvh]
               w-full
               max-w-2xl
               min-h-0
@@ -229,6 +280,14 @@ export function EchoChatbot({
               sm:max-h-[85vh]
               sm:rounded-3xl
             "
+            style={
+              mobileViewportHeight
+                ? {
+                    height: `${mobileViewportHeight}px`,
+                    maxHeight: `${mobileViewportHeight}px`,
+                  }
+                : undefined
+            }
           >
             {/* Scanline accent */}
             <div
@@ -358,7 +417,7 @@ export function EchoChatbot({
             </header>
 
             {/* Messages */}
-            <div
+            <main
               ref={scrollRef}
               className="
                 relative
@@ -429,6 +488,7 @@ export function EchoChatbot({
                 </div>
               )}
 
+              {/* Signal analysis */}
               {(phase === 'analysis' ||
                 phase === 'transmitting') &&
                 analysis && (
@@ -439,16 +499,17 @@ export function EchoChatbot({
                   />
                 )}
 
+              {/* Submission success */}
               {phase === 'submitted' && analysis && (
                 <SubmissionSuccess
                   signalId={analysis.signalId}
                 />
               )}
-            </div>
+            </main>
 
             {/* Input area */}
             {isCollecting && (
-              <div
+              <footer
                 className="
                   relative
                   z-30
@@ -470,7 +531,7 @@ export function EchoChatbot({
                       : placeholder
                   }
                 />
-              </div>
+              </footer>
             )}
 
             {/* Close button after submission */}
