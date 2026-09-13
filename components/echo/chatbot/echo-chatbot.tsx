@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useRef } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import Image from 'next/image'
 import { AnimatePresence, motion } from 'framer-motion'
 import { X } from 'lucide-react'
@@ -35,6 +35,9 @@ export function EchoChatbot({
   const scrollRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
+  const [viewportHeight, setViewportHeight] = useState<number | null>(null)
+  const [viewportTop, setViewportTop] = useState(0)
+
   const handleClose = useCallback(() => {
     onClose()
   }, [onClose])
@@ -44,6 +47,9 @@ export function EchoChatbot({
     onClose()
   }, [resetChat, onClose])
 
+  /*
+   * Scroll to the newest message.
+   */
   const scrollToBottom = useCallback(
     (behavior: ScrollBehavior = 'smooth') => {
       const container = scrollRef.current
@@ -58,7 +64,50 @@ export function EchoChatbot({
     [],
   )
 
-  // Scroll to the latest message.
+  /*
+   * Keep the chatbot inside the visible viewport when
+   * the mobile keyboard opens or closes.
+   */
+  useEffect(() => {
+    if (!open) return
+
+    const updateViewport = () => {
+      const viewport = window.visualViewport
+
+      const height = viewport?.height ?? window.innerHeight
+      const top = viewport?.offsetTop ?? 0
+
+      setViewportHeight(height)
+      setViewportTop(top)
+
+      window.requestAnimationFrame(() => {
+        scrollToBottom('auto')
+      })
+    }
+
+    updateViewport()
+
+    const viewport = window.visualViewport
+
+    viewport?.addEventListener('resize', updateViewport)
+    viewport?.addEventListener('scroll', updateViewport)
+    window.addEventListener('resize', updateViewport)
+
+    return () => {
+      viewport?.removeEventListener('resize', updateViewport)
+      viewport?.removeEventListener('scroll', updateViewport)
+      window.removeEventListener('resize', updateViewport)
+    }
+  }, [open, scrollToBottom])
+
+  /*
+   * Automatically scroll when:
+   * - a new message is added
+   * - ECHO starts/stops typing
+   * - the chat phase changes
+   * - analysis content appears
+   * - the chatbot opens
+   */
   useEffect(() => {
     if (!open) return
 
@@ -78,34 +127,18 @@ export function EchoChatbot({
     scrollToBottom,
   ])
 
-  // Handle mobile keyboard and viewport changes.
-  useEffect(() => {
-    if (!open) return
-
-    const viewport = window.visualViewport
-
-    const handleViewportChange = () => {
-      window.requestAnimationFrame(() => {
-        scrollToBottom('auto')
-      })
-    }
-
-    viewport?.addEventListener('resize', handleViewportChange)
-    viewport?.addEventListener('scroll', handleViewportChange)
-
-    return () => {
-      viewport?.removeEventListener('resize', handleViewportChange)
-      viewport?.removeEventListener('scroll', handleViewportChange)
-    }
-  }, [open, scrollToBottom])
-
-  // Focus the input when ECHO finishes typing.
+  /*
+   * Focus the input when ECHO finishes typing.
+   */
   useEffect(() => {
     if (!open || isTyping || !isCollecting) return
 
     const timer = window.setTimeout(() => {
       inputRef.current?.focus()
-      scrollToBottom('auto')
+
+      window.requestAnimationFrame(() => {
+        scrollToBottom('auto')
+      })
     }, 150)
 
     return () => {
@@ -119,7 +152,9 @@ export function EchoChatbot({
     scrollToBottom,
   ])
 
-  // Lock background scrolling and support Escape.
+  /*
+   * Lock background scrolling and support Escape key.
+   */
   useEffect(() => {
     if (!open) return
 
@@ -162,7 +197,8 @@ export function EchoChatbot({
           transition={{ duration: 0.25 }}
           className="
             fixed
-            inset-0
+            inset-x-0
+            bottom-0
             z-[999]
             flex
             items-end
@@ -171,9 +207,19 @@ export function EchoChatbot({
             bg-background/80
             p-0
             backdrop-blur-md
+            sm:inset-0
             sm:items-center
             sm:p-4
           "
+          style={
+            viewportHeight
+              ? {
+                  height: `${viewportHeight}px`,
+                  top: `${viewportTop}px`,
+                  bottom: 'auto',
+                }
+              : undefined
+          }
           role="dialog"
           aria-modal="true"
           aria-label="ECHO signal channel"
@@ -204,8 +250,8 @@ export function EchoChatbot({
               chat-shell
               relative
               flex
-              h-[100dvh]
-              max-h-[100dvh]
+              h-full
+              max-h-full
               w-full
               min-h-0
               flex-col
@@ -336,6 +382,7 @@ export function EchoChatbot({
                         shadow-[0_0_8px_var(--cyan)]
                       "
                     />
+
                     ONLINE
                   </div>
                 </div>
