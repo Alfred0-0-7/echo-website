@@ -44,7 +44,6 @@ export function EchoChatbot({
     onClose()
   }, [resetChat, onClose])
 
-  // Scroll to the newest message
   const scrollToBottom = useCallback(
     (behavior: ScrollBehavior = 'smooth') => {
       const container = scrollRef.current
@@ -59,85 +58,86 @@ export function EchoChatbot({
     [],
   )
 
-  useEffect(() => {
-    scrollToBottom()
-  }, [messages, isTyping, phase, scrollToBottom])
-
-  // Scroll again when the mobile keyboard changes the viewport height
+  // Scroll to the latest message.
   useEffect(() => {
     if (!open) return
 
-    const handleViewportResize = () => {
+    const frame = window.requestAnimationFrame(() => {
+      scrollToBottom('smooth')
+    })
+
+    return () => {
+      window.cancelAnimationFrame(frame)
+    }
+  }, [
+    open,
+    messages,
+    isTyping,
+    phase,
+    analysis,
+    scrollToBottom,
+  ])
+
+  // Handle mobile keyboard and viewport changes.
+  useEffect(() => {
+    if (!open) return
+
+    const viewport = window.visualViewport
+
+    const handleViewportChange = () => {
       window.requestAnimationFrame(() => {
         scrollToBottom('auto')
       })
     }
 
-    window.visualViewport?.addEventListener(
-      'resize',
-      handleViewportResize,
-    )
-
-    window.visualViewport?.addEventListener(
-      'scroll',
-      handleViewportResize,
-    )
+    viewport?.addEventListener('resize', handleViewportChange)
+    viewport?.addEventListener('scroll', handleViewportChange)
 
     return () => {
-      window.visualViewport?.removeEventListener(
-        'resize',
-        handleViewportResize,
-      )
-
-      window.visualViewport?.removeEventListener(
-        'scroll',
-        handleViewportResize,
-      )
+      viewport?.removeEventListener('resize', handleViewportChange)
+      viewport?.removeEventListener('scroll', handleViewportChange)
     }
   }, [open, scrollToBottom])
 
-  // Focus the input after ECHO finishes typing
+  // Focus the input when ECHO finishes typing.
   useEffect(() => {
-    if (!isTyping && isCollecting && open) {
-      const timer = window.setTimeout(() => {
-        inputRef.current?.focus()
-        scrollToBottom('auto')
-      }, 150)
+    if (!open || isTyping || !isCollecting) return
 
-      return () => {
-        window.clearTimeout(timer)
-      }
+    const timer = window.setTimeout(() => {
+      inputRef.current?.focus()
+      scrollToBottom('auto')
+    }, 150)
+
+    return () => {
+      window.clearTimeout(timer)
     }
   }, [
+    open,
     isTyping,
     isCollecting,
     phase,
-    open,
     scrollToBottom,
   ])
 
-  // Lock body scroll and close with Escape
+  // Lock background scrolling and support Escape.
   useEffect(() => {
     if (!open) return
 
     const previousOverflow = document.body.style.overflow
-    const previousTouchAction = document.body.style.touchAction
 
     document.body.style.overflow = 'hidden'
-    document.body.style.touchAction = 'none'
 
-    const onKey = (event: KeyboardEvent) => {
+    const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         handleClose()
       }
     }
 
-    window.addEventListener('keydown', onKey)
+    window.addEventListener('keydown', handleKeyDown)
 
     return () => {
       document.body.style.overflow = previousOverflow
-      document.body.style.touchAction = previousTouchAction
-      window.removeEventListener('keydown', onKey)
+      window.removeEventListener('keydown', handleKeyDown)
     }
   }, [open, handleClose])
 
@@ -159,13 +159,13 @@ export function EchoChatbot({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.3 }}
+          transition={{ duration: 0.25 }}
           className="
             fixed
             inset-0
             z-[999]
             flex
-            items-start
+            items-end
             justify-center
             overflow-hidden
             bg-background/80
@@ -180,11 +180,23 @@ export function EchoChatbot({
           onClick={handleClose}
         >
           <motion.div
-            initial={{ opacity: 0, y: 30, scale: 0.98 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 30, scale: 0.98 }}
+            initial={{
+              opacity: 0,
+              y: 24,
+              scale: 0.98,
+            }}
+            animate={{
+              opacity: 1,
+              y: 0,
+              scale: 1,
+            }}
+            exit={{
+              opacity: 0,
+              y: 24,
+              scale: 0.98,
+            }}
             transition={{
-              duration: 0.4,
+              duration: 0.3,
               ease: [0.22, 1, 0.36, 1],
             }}
             onClick={(event) => event.stopPropagation()}
@@ -195,21 +207,23 @@ export function EchoChatbot({
               h-[100dvh]
               max-h-[100dvh]
               w-full
-              max-w-2xl
               min-h-0
               flex-col
               overflow-hidden
+              rounded-t-2xl
               border
               border-cyan/20
               bg-background/95
+              shadow-2xl
               sm:h-[85vh]
               sm:max-h-[85vh]
+              sm:max-w-2xl
               sm:rounded-3xl
             "
           >
             {/* Scanline accent */}
             <div
-              aria-hidden
+              aria-hidden="true"
               className="
                 pointer-events-none
                 absolute
@@ -270,9 +284,19 @@ export function EchoChatbot({
                     fill
                     sizes="40px"
                     className="object-cover"
+                    priority
                   />
 
-                  <span className="absolute inset-0 rounded-full ring-2 ring-cyan/30" />
+                  <span
+                    aria-hidden="true"
+                    className="
+                      absolute
+                      inset-0
+                      rounded-full
+                      ring-2
+                      ring-cyan/30
+                    "
+                  />
                 </div>
 
                 <div className="min-w-0">
@@ -282,10 +306,10 @@ export function EchoChatbot({
                       font-display
                       text-xs
                       font-semibold
-                      tracking-[0.16em]
+                      tracking-[0.12em]
                       text-foreground
                       sm:text-sm
-                      sm:tracking-[0.25em]
+                      sm:tracking-[0.2em]
                     "
                   >
                     ECHO // SIGNAL CHANNEL
@@ -302,13 +326,21 @@ export function EchoChatbot({
                       text-cyan
                     "
                   >
-                    <span className="h-1.5 w-1.5 rounded-full bg-cyan shadow-[0_0_8px_var(--cyan)]" />
+                    <span
+                      aria-hidden="true"
+                      className="
+                        h-1.5
+                        w-1.5
+                        rounded-full
+                        bg-cyan
+                        shadow-[0_0_8px_var(--cyan)]
+                      "
+                    />
                     ONLINE
                   </div>
                 </div>
               </div>
 
-              {/* Close button */}
               <button
                 type="button"
                 onClick={handleClose}
@@ -441,6 +473,9 @@ export function EchoChatbot({
                     text-cyan
                     transition-colors
                     hover:bg-cyan/10
+                    focus-visible:outline-none
+                    focus-visible:ring-2
+                    focus-visible:ring-cyan
                   "
                 >
                   CLOSE CHANNEL
