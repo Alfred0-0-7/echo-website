@@ -45,53 +45,31 @@ export function EchoChatbot({
   }, [resetChat, onClose])
 
   // Scroll to the newest message
-  const scrollToBottom = useCallback((behavior: ScrollBehavior = 'smooth') => {
-    const container = scrollRef.current
+  const scrollToBottom = useCallback(
+    (behavior: ScrollBehavior = 'smooth') => {
+      const container = scrollRef.current
 
-    if (!container) return
+      if (!container) return
 
-    container.scrollTo({
-      top: container.scrollHeight,
-      behavior,
-    })
-  }, [])
+      container.scrollTo({
+        top: container.scrollHeight,
+        behavior,
+      })
+    },
+    [],
+  )
 
-  useEffect(() => {
-    scrollToBottom()
-  }, [messages, isTyping, phase, scrollToBottom])
-
-  // Scroll again when the mobile keyboard changes the viewport height
   useEffect(() => {
     if (!open) return
 
-    const handleViewportResize = () => {
-      window.requestAnimationFrame(() => {
-        scrollToBottom('auto')
-      })
-    }
-
-    window.visualViewport?.addEventListener(
-      'resize',
-      handleViewportResize,
-    )
-
-    window.visualViewport?.addEventListener(
-      'scroll',
-      handleViewportResize,
-    )
+    const timer = window.setTimeout(() => {
+      scrollToBottom('auto')
+    }, 50)
 
     return () => {
-      window.visualViewport?.removeEventListener(
-        'resize',
-        handleViewportResize,
-      )
-
-      window.visualViewport?.removeEventListener(
-        'scroll',
-        handleViewportResize,
-      )
+      window.clearTimeout(timer)
     }
-  }, [open, scrollToBottom])
+  }, [open, messages, isTyping, phase, scrollToBottom])
 
   // Focus the input after ECHO finishes typing
   useEffect(() => {
@@ -113,7 +91,7 @@ export function EchoChatbot({
     scrollToBottom,
   ])
 
-  // Lock body scroll and close with Escape
+  // Lock body scroll while chatbot is open
   useEffect(() => {
     if (!open) return
 
@@ -165,6 +143,7 @@ export function EchoChatbot({
             items-start
             justify-center
             overflow-hidden
+            overscroll-none
             bg-background/80
             p-0
             backdrop-blur-md
@@ -188,13 +167,14 @@ export function EchoChatbot({
             className="
               relative
               flex
-              h-[100dvh]
-              max-h-[100dvh]
+              h-[100svh]
+              max-h-[100svh]
               w-full
               max-w-2xl
               min-h-0
               flex-col
               overflow-hidden
+              overscroll-none
               border
               border-cyan/20
               bg-background/95
@@ -303,7 +283,6 @@ export function EchoChatbot({
                 </div>
               </div>
 
-              {/* Close button */}
               <button
                 type="button"
                 onClick={handleClose}
