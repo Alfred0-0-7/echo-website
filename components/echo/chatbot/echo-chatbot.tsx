@@ -36,8 +36,6 @@ export function EchoChatbot({
   const inputRef = useRef<HTMLInputElement>(null)
 
   const [isServerLoading, setIsServerLoading] = useState(false)
-  const [mobileViewportHeight, setMobileViewportHeight] =
-    useState<number | null>(null)
 
   const handleClose = useCallback(() => {
     onClose()
@@ -47,47 +45,6 @@ export function EchoChatbot({
     resetChat()
     onClose()
   }, [resetChat, onClose])
-
-  /*
-   * Detect the visible mobile viewport.
-   *
-   * When the mobile keyboard opens, visualViewport.height becomes
-   * smaller than the normal browser viewport height.
-   */
-  useEffect(() => {
-    if (!open) return
-
-    const updateViewportHeight = () => {
-      const viewport = window.visualViewport
-
-      if (!viewport) {
-        setMobileViewportHeight(null)
-        return
-      }
-
-      const isMobile = window.innerWidth < 640
-
-      if (isMobile) {
-        setMobileViewportHeight(viewport.height)
-      } else {
-        setMobileViewportHeight(null)
-      }
-    }
-
-    updateViewportHeight()
-
-    const viewport = window.visualViewport
-
-    viewport?.addEventListener('resize', updateViewportHeight)
-    viewport?.addEventListener('scroll', updateViewportHeight)
-    window.addEventListener('resize', updateViewportHeight)
-
-    return () => {
-      viewport?.removeEventListener('resize', updateViewportHeight)
-      viewport?.removeEventListener('scroll', updateViewportHeight)
-      window.removeEventListener('resize', updateViewportHeight)
-    }
-  }, [open])
 
   /*
    * Scroll to the newest message.
@@ -125,8 +82,7 @@ export function EchoChatbot({
   )
 
   /*
-   * Scroll whenever messages, typing state, analysis, or viewport
-   * height changes.
+   * Scroll whenever chat content changes.
    */
   useEffect(() => {
     if (!open) return
@@ -145,7 +101,6 @@ export function EchoChatbot({
     isServerLoading,
     phase,
     analysis,
-    mobileViewportHeight,
     scrollToBottom,
   ])
 
@@ -178,8 +133,7 @@ export function EchoChatbot({
   ])
 
   /*
-   * Lock the background page while the chatbot is open.
-   * Do not disable touch scrolling because the messages need to scroll.
+   * Lock the background page while chatbot is open.
    */
   useEffect(() => {
     if (!open) return
@@ -222,39 +176,40 @@ export function EchoChatbot({
           exit={{ opacity: 0 }}
           transition={{ duration: 0.3 }}
           className="
+            pointer-events-none
             fixed
             inset-0
             z-[999]
             flex
-            items-start
-            justify-center
+            items-end
+            justify-end
             overflow-hidden
             overscroll-none
-            bg-background/80
-            p-0
-            backdrop-blur-md
-            sm:items-center
-            sm:p-4
+            bg-transparent
+            p-4
+            sm:p-5
           "
           role="dialog"
           aria-modal="true"
           aria-label="ECHO signal channel"
-          onClick={handleClose}
         >
           <motion.div
             initial={{
               opacity: 0,
-              y: 30,
+              x: 30,
+              y: 20,
               scale: 0.98,
             }}
             animate={{
               opacity: 1,
+              x: 0,
               y: 0,
               scale: 1,
             }}
             exit={{
               opacity: 0,
-              y: 30,
+              x: 30,
+              y: 20,
               scale: 0.98,
             }}
             transition={{
@@ -263,31 +218,28 @@ export function EchoChatbot({
             }}
             onClick={(event) => event.stopPropagation()}
             className="
+              pointer-events-auto
               relative
               flex
-              h-[100dvh]
-              max-h-[100dvh]
-              w-full
-              max-w-2xl
+              h-[620px]
+              max-h-[calc(100vh-40px)]
+              w-[420px]
+              max-w-full
               min-h-0
               flex-col
               overflow-hidden
               overscroll-none
+              rounded-2xl
               border
               border-cyan/20
               bg-background/95
-              sm:h-[85vh]
-              sm:max-h-[85vh]
-              sm:rounded-3xl
+              shadow-2xl
+              backdrop-blur-xl
+              max-sm:h-[520px]
+              max-sm:w-full
+              max-sm:max-w-[calc(100vw-32px)]
+              max-sm:rounded-2xl
             "
-            style={
-              mobileViewportHeight
-                ? {
-                    height: `${mobileViewportHeight}px`,
-                    maxHeight: `${mobileViewportHeight}px`,
-                  }
-                : undefined
-            }
           >
             {/* Scanline accent */}
             <div
