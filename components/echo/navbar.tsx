@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { AnimatePresence, motion } from 'framer-motion'
 import { Menu, X, MessageCircle } from 'lucide-react'
 import { EchoLogo } from './echo-logo'
 import { cn } from '@/lib/utils'
@@ -27,20 +26,24 @@ export function Navbar({
   const [open, setOpen] = useState(false)
 
   useEffect(() => {
-    const onScroll = () => {
+    const handleScroll = () => {
       setScrolled(window.scrollY > 40)
     }
 
-    onScroll()
+    handleScroll()
 
-    window.addEventListener('scroll', onScroll, {
+    window.addEventListener('scroll', handleScroll, {
       passive: true,
     })
 
     return () => {
-      window.removeEventListener('scroll', onScroll)
+      window.removeEventListener('scroll', handleScroll)
     }
   }, [])
+
+  const closeMobileMenu = () => {
+    setOpen(false)
+  }
 
   return (
     <>
@@ -49,7 +52,7 @@ export function Navbar({
         className={cn(
           'fixed inset-x-0 top-0 z-50 transition-all duration-500',
           scrolled
-            ? 'border-b border-cyan/10 bg-background/70 backdrop-blur-xl'
+            ? 'border-b border-cyan/10 bg-background/90 backdrop-blur-xl'
             : 'bg-transparent',
         )}
       >
@@ -57,7 +60,7 @@ export function Navbar({
           {/* Logo */}
           <a
             href="#home"
-            onClick={() => setOpen(false)}
+            onClick={closeMobileMenu}
             className="group flex items-center gap-2.5"
             aria-label="ECHO home"
           >
@@ -85,8 +88,8 @@ export function Navbar({
           {/* Mobile Menu Button */}
           <button
             type="button"
-            className="inline-flex h-10 w-10 items-center justify-center rounded-lg text-foreground transition-colors hover:bg-cyan/10 hover:text-cyan lg:hidden"
-            onClick={() => setOpen((value) => !value)}
+            onClick={() => setOpen(!open)}
+            className="relative z-[70] inline-flex h-10 w-10 items-center justify-center rounded-lg text-foreground transition-colors hover:bg-cyan/10 hover:text-cyan lg:hidden"
             aria-label={open ? 'Close menu' : 'Open menu'}
             aria-expanded={open}
           >
@@ -98,32 +101,24 @@ export function Navbar({
           </button>
         </nav>
 
-        {/* Mobile Navigation Menu */}
-        <AnimatePresence>
-          {open && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.3 }}
-              className="overflow-hidden border-t border-cyan/10 bg-background/95 backdrop-blur-xl lg:hidden"
-            >
-              <ul className="flex flex-col gap-1 px-6 py-4">
-                {NAV_LINKS.map((link) => (
-                  <li key={link.href}>
-                    <a
-                      href={link.href}
-                      onClick={() => setOpen(false)}
-                      className="block rounded-lg px-3 py-3 font-mono text-sm tracking-[0.2em] text-muted-foreground transition-colors hover:bg-cyan/10 hover:text-cyan"
-                    >
-                      {link.label}
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </motion.div>
-          )}
-        </AnimatePresence>
+        {/* Mobile Navigation */}
+        {open && (
+          <div className="relative z-[60] border-t border-cyan/10 bg-background/95 backdrop-blur-xl lg:hidden">
+            <ul className="flex flex-col gap-1 px-6 py-4">
+              {NAV_LINKS.map((link) => (
+                <li key={link.href}>
+                  <a
+                    href={link.href}
+                    onClick={closeMobileMenu}
+                    className="block w-full rounded-lg px-3 py-4 font-mono text-sm tracking-[0.2em] text-muted-foreground transition-colors hover:bg-cyan/10 hover:text-cyan"
+                  >
+                    {link.label}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
       </header>
 
       {/* Floating Chat Button */}
@@ -170,7 +165,6 @@ export function Navbar({
             strokeWidth={1.8}
           />
 
-          {/* Notification dot */}
           <span className="absolute right-1 top-1 h-2.5 w-2.5 rounded-full bg-white shadow-sm sm:right-1.5 sm:top-1.5" />
         </button>
       )}
