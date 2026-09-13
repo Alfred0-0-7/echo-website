@@ -170,3 +170,54 @@
     transform: translateY(100%);
   }
 }
+/* Mobile keyboard and chatbot layout fix */
+html,
+body {
+  width: 100%;
+  min-height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
+/* Main chatbot wrapper */
+.chat-shell {
+  width: 100%;
+  height: 100dvh;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Fixed header */
+.chat-header {
+  flex: 0 0 auto;
+  position: relative;
+  z-index: 20;
+}
+
+/* Only the message area scrolls */
+.chat-messages {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Input stays at the bottom */
+.chat-input-area {
+  flex: 0 0 auto;
+  position: relative;
+  z-index: 20;
+  padding-bottom: max(
+    12px,
+    env(safe-area-inset-bottom)
+  );
+}

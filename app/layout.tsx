@@ -27,7 +27,14 @@ export const metadata: Metadata = {
   description:
     'ECHO listens for the signals others miss. A superhero help platform that turns unheard problems into action. I hear what others ignore.',
   generator: 'v0.app',
-  keywords: ['ECHO', 'Signal Guardian', 'superhero', 'help platform', 'grievance', 'signal'],
+  keywords: [
+    'ECHO',
+    'Signal Guardian',
+    'superhero',
+    'help platform',
+    'grievance',
+    'signal',
+  ],
   openGraph: {
     title: 'ECHO — The Signal Guardian',
     description: 'I hear what others ignore. Send your signal.',
@@ -40,6 +47,7 @@ export const viewport: Viewport = {
   themeColor: '#0a0e14',
   width: 'device-width',
   initialScale: 1,
+  viewportFit: 'cover',
 }
 
 export default function RootLayout({
@@ -54,6 +62,7 @@ export default function RootLayout({
     >
       <body className="bg-background text-foreground overflow-x-hidden">
         {children}
+
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>
     </html>

@@ -45,16 +45,19 @@ export function EchoChatbot({
   }, [resetChat, onClose])
 
   // Scroll to the newest message
-  const scrollToBottom = useCallback((behavior: ScrollBehavior = 'smooth') => {
-    const container = scrollRef.current
+  const scrollToBottom = useCallback(
+    (behavior: ScrollBehavior = 'smooth') => {
+      const container = scrollRef.current
 
-    if (!container) return
+      if (!container) return
 
-    container.scrollTo({
-      top: container.scrollHeight,
-      behavior,
-    })
-  }, [])
+      container.scrollTo({
+        top: container.scrollHeight,
+        behavior,
+      })
+    },
+    [],
+  )
 
   useEffect(() => {
     scrollToBottom()
@@ -186,6 +189,7 @@ export function EchoChatbot({
             }}
             onClick={(event) => event.stopPropagation()}
             className="
+              chat-shell
               relative
               flex
               h-[100dvh]
@@ -228,6 +232,7 @@ export function EchoChatbot({
             {/* Header */}
             <header
               className="
+                chat-header
                 relative
                 z-20
                 flex
@@ -332,9 +337,10 @@ export function EchoChatbot({
             </header>
 
             {/* Messages */}
-            <div
+            <main
               ref={scrollRef}
               className="
+                chat-messages
                 relative
                 z-10
                 min-h-0
@@ -378,12 +384,13 @@ export function EchoChatbot({
                   signalId={analysis.signalId}
                 />
               )}
-            </div>
+            </main>
 
             {/* Input area */}
             {isCollecting && (
-              <div
+              <footer
                 className="
+                  chat-input-area
                   relative
                   z-30
                   shrink-0
@@ -400,13 +407,14 @@ export function EchoChatbot({
                   disabled={isTyping}
                   placeholder={placeholder}
                 />
-              </div>
+              </footer>
             )}
 
             {/* Close button after submission */}
             {phase === 'submitted' && (
-              <div
+              <footer
                 className="
+                  chat-input-area
                   relative
                   z-30
                   shrink-0
@@ -437,7 +445,7 @@ export function EchoChatbot({
                 >
                   CLOSE CHANNEL
                 </button>
-              </div>
+              </footer>
             )}
           </motion.div>
         </motion.div>
