@@ -42,27 +42,6 @@ export function Navbar({
     }
   }, [])
 
-  const handleNavigation = (
-    event: React.MouseEvent<HTMLAnchorElement>,
-    href: string,
-  ) => {
-    event.preventDefault()
-
-    const targetId = href.replace('#', '')
-    const targetElement = document.getElementById(targetId)
-
-    if (targetElement) {
-      targetElement.scrollIntoView({
-        behavior: 'smooth',
-        block: 'start',
-      })
-
-      window.history.pushState(null, '', href)
-    }
-
-    setOpen(false)
-  }
-
   return (
     <>
       {/* Navbar */}
@@ -78,7 +57,7 @@ export function Navbar({
           {/* Logo */}
           <a
             href="#home"
-            onClick={(event) => handleNavigation(event, '#home')}
+            onClick={() => setOpen(false)}
             className="group flex items-center gap-2.5"
             aria-label="ECHO home"
           >
@@ -95,7 +74,6 @@ export function Navbar({
               <li key={link.href}>
                 <a
                   href={link.href}
-                  onClick={(event) => handleNavigation(event, link.href)}
                   className="relative font-mono text-xs tracking-[0.2em] text-muted-foreground transition-colors hover:text-cyan after:absolute after:-bottom-1.5 after:left-0 after:h-px after:w-0 after:bg-cyan after:transition-all hover:after:w-full"
                 >
                   {link.label}
@@ -135,9 +113,7 @@ export function Navbar({
                   <li key={link.href}>
                     <a
                       href={link.href}
-                      onClick={(event) =>
-                        handleNavigation(event, link.href)
-                      }
+                      onClick={() => setOpen(false)}
                       className="block rounded-lg px-3 py-3 font-mono text-sm tracking-[0.2em] text-muted-foreground transition-colors hover:bg-cyan/10 hover:text-cyan"
                     >
                       {link.label}
