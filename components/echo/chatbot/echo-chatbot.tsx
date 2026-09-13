@@ -33,24 +33,12 @@ export function EchoChatbot({
   } = useChat()
 
   const scrollRef = useRef<HTMLDivElement>(null)
-
-  // Reference for the chatbot typing input
   const inputRef = useRef<HTMLInputElement>(null)
 
-  /*
-   * Normal close:
-   * Only hides the chatbot.
-   * It does NOT clear the entered details.
-   */
   const handleClose = useCallback(() => {
     onClose()
   }, [onClose])
 
-  /*
-   * Close Channel:
-   * Clears the complete chat only when the user
-   * clicks the CLOSE CHANNEL button.
-   */
   const handleCloseChannel = useCallback(() => {
     resetChat()
     onClose()
@@ -117,7 +105,7 @@ export function EchoChatbot({
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.3 }}
-          className="fixed inset-0 z-[90] flex items-center justify-center bg-background/80 p-0 backdrop-blur-md sm:p-4"
+          className="fixed inset-0 z-[999] flex items-center justify-center bg-background/80 p-0 backdrop-blur-md sm:p-4"
           role="dialog"
           aria-modal="true"
           aria-label="ECHO signal channel"
@@ -132,12 +120,26 @@ export function EchoChatbot({
               ease: [0.22, 1, 0.36, 1],
             }}
             onClick={(event) => event.stopPropagation()}
-            className="relative flex h-dvh w-full max-w-2xl flex-col overflow-hidden border border-cyan/20 bg-background/95 sm:h-[85vh] sm:rounded-3xl"
+            className="
+              relative
+              flex
+              h-[100dvh]
+              w-full
+              max-w-2xl
+              min-h-0
+              flex-col
+              overflow-hidden
+              border
+              border-cyan/20
+              bg-background/95
+              sm:h-[85vh]
+              sm:rounded-3xl
+            "
           >
             {/* Scanline accent */}
             <div
               aria-hidden
-              className="pointer-events-none absolute inset-0 overflow-hidden opacity-[0.05]"
+              className="pointer-events-none absolute inset-0 z-0 overflow-hidden opacity-[0.05]"
             >
               <div
                 className="absolute inset-x-0 h-32"
@@ -150,9 +152,9 @@ export function EchoChatbot({
             </div>
 
             {/* Header */}
-            <header className="relative flex items-center justify-between border-b border-cyan/15 bg-card/40 px-5 py-4 backdrop-blur">
-              <div className="flex items-center gap-3">
-                <div className="relative h-10 w-10 overflow-hidden rounded-full border border-cyan/40">
+            <header className="relative z-20 flex shrink-0 items-center justify-between border-b border-cyan/15 bg-card/40 px-4 py-3 backdrop-blur sm:px-5 sm:py-4">
+              <div className="flex min-w-0 items-center gap-3">
+                <div className="relative h-9 w-9 shrink-0 overflow-hidden rounded-full border border-cyan/40 sm:h-10 sm:w-10">
                   <Image
                     src="/assets/echo-avatar.png"
                     alt="ECHO"
@@ -164,8 +166,8 @@ export function EchoChatbot({
                   <span className="absolute inset-0 rounded-full ring-2 ring-cyan/30" />
                 </div>
 
-                <div>
-                  <div className="font-display text-sm font-semibold tracking-[0.25em] text-foreground">
+                <div className="min-w-0">
+                  <div className="truncate font-display text-xs font-semibold tracking-[0.16em] text-foreground sm:text-sm sm:tracking-[0.25em]">
                     ECHO // SIGNAL CHANNEL
                   </div>
 
@@ -176,12 +178,12 @@ export function EchoChatbot({
                 </div>
               </div>
 
-              {/* Normal close button - does not clear details */}
+              {/* Close button */}
               <button
                 type="button"
                 onClick={handleClose}
                 aria-label="Close signal channel"
-                className="inline-flex h-10 w-10 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-white/5 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan"
+                className="relative z-30 inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-white/5 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -190,7 +192,19 @@ export function EchoChatbot({
             {/* Messages */}
             <div
               ref={scrollRef}
-              className="relative flex-1 space-y-4 overflow-y-auto px-5 py-6"
+              className="
+                relative
+                z-10
+                min-h-0
+                flex-1
+                space-y-4
+                overflow-y-auto
+                overscroll-contain
+                px-4
+                py-5
+                sm:px-5
+                sm:py-6
+              "
             >
               {messages.map((message) => (
                 <ChatMessage
@@ -222,19 +236,43 @@ export function EchoChatbot({
               )}
             </div>
 
-            {/* Input - only while collecting data */}
+            {/* Input area */}
             {isCollecting && (
-              <ChatInput
-                ref={inputRef}
-                onSend={sendUserMessage}
-                disabled={isTyping}
-                placeholder={placeholder}
-              />
+              <div
+                className="
+                  relative
+                  z-30
+                  shrink-0
+                  border-t
+                  border-cyan/15
+                  bg-background/95
+                  pb-[env(safe-area-inset-bottom)]
+                  shadow-[0_-8px_24px_rgba(0,0,0,0.18)]
+                "
+              >
+                <ChatInput
+                  ref={inputRef}
+                  onSend={sendUserMessage}
+                  disabled={isTyping}
+                  placeholder={placeholder}
+                />
+              </div>
             )}
 
             {/* Close button after submission */}
             {phase === 'submitted' && (
-              <div className="border-t border-cyan/15 bg-background/60 p-3">
+              <div
+                className="
+                  relative
+                  z-30
+                  shrink-0
+                  border-t
+                  border-cyan/15
+                  bg-background/95
+                  p-3
+                  pb-[calc(0.75rem+env(safe-area-inset-bottom))]
+                "
+              >
                 <button
                   type="button"
                   onClick={handleCloseChannel}
