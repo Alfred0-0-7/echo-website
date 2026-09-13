@@ -44,33 +44,84 @@ export function EchoChatbot({
     onClose()
   }, [resetChat, onClose])
 
-  // Automatically scroll to the newest content
-  useEffect(() => {
-    scrollRef.current?.scrollTo({
-      top: scrollRef.current.scrollHeight,
-      behavior: 'smooth',
-    })
-  }, [messages, isTyping, phase])
+  // Scroll to the newest message
+  const scrollToBottom = useCallback((behavior: ScrollBehavior = 'smooth') => {
+    const container = scrollRef.current
 
-  // Automatically focus the input after ECHO finishes typing
+    if (!container) return
+
+    container.scrollTo({
+      top: container.scrollHeight,
+      behavior,
+    })
+  }, [])
+
+  useEffect(() => {
+    scrollToBottom()
+  }, [messages, isTyping, phase, scrollToBottom])
+
+  // Scroll again when the mobile keyboard changes the viewport height
+  useEffect(() => {
+    if (!open) return
+
+    const handleViewportResize = () => {
+      window.requestAnimationFrame(() => {
+        scrollToBottom('auto')
+      })
+    }
+
+    window.visualViewport?.addEventListener(
+      'resize',
+      handleViewportResize,
+    )
+
+    window.visualViewport?.addEventListener(
+      'scroll',
+      handleViewportResize,
+    )
+
+    return () => {
+      window.visualViewport?.removeEventListener(
+        'resize',
+        handleViewportResize,
+      )
+
+      window.visualViewport?.removeEventListener(
+        'scroll',
+        handleViewportResize,
+      )
+    }
+  }, [open, scrollToBottom])
+
+  // Focus the input after ECHO finishes typing
   useEffect(() => {
     if (!isTyping && isCollecting && open) {
       const timer = window.setTimeout(() => {
         inputRef.current?.focus()
-      }, 50)
+        scrollToBottom('auto')
+      }, 150)
 
       return () => {
         window.clearTimeout(timer)
       }
     }
-  }, [isTyping, isCollecting, phase, open])
+  }, [
+    isTyping,
+    isCollecting,
+    phase,
+    open,
+    scrollToBottom,
+  ])
 
-  // Lock body scroll and close on Escape while open
+  // Lock body scroll and close with Escape
   useEffect(() => {
     if (!open) return
 
     const previousOverflow = document.body.style.overflow
+    const previousTouchAction = document.body.style.touchAction
+
     document.body.style.overflow = 'hidden'
+    document.body.style.touchAction = 'none'
 
     const onKey = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
@@ -82,6 +133,7 @@ export function EchoChatbot({
 
     return () => {
       document.body.style.overflow = previousOverflow
+      document.body.style.touchAction = previousTouchAction
       window.removeEventListener('keydown', onKey)
     }
   }, [open, handleClose])
@@ -105,7 +157,20 @@ export function EchoChatbot({
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.3 }}
-          className="fixed inset-0 z-[999] flex items-center justify-center bg-background/80 p-0 backdrop-blur-md sm:p-4"
+          className="
+            fixed
+            inset-0
+            z-[999]
+            flex
+            items-start
+            justify-center
+            overflow-hidden
+            bg-background/80
+            p-0
+            backdrop-blur-md
+            sm:items-center
+            sm:p-4
+          "
           role="dialog"
           aria-modal="true"
           aria-label="ECHO signal channel"
@@ -124,6 +189,7 @@ export function EchoChatbot({
               relative
               flex
               h-[100dvh]
+              max-h-[100dvh]
               w-full
               max-w-2xl
               min-h-0
@@ -133,13 +199,21 @@ export function EchoChatbot({
               border-cyan/20
               bg-background/95
               sm:h-[85vh]
+              sm:max-h-[85vh]
               sm:rounded-3xl
             "
           >
             {/* Scanline accent */}
             <div
               aria-hidden
-              className="pointer-events-none absolute inset-0 z-0 overflow-hidden opacity-[0.05]"
+              className="
+                pointer-events-none
+                absolute
+                inset-0
+                z-0
+                overflow-hidden
+                opacity-[0.05]
+              "
             >
               <div
                 className="absolute inset-x-0 h-32"
@@ -152,9 +226,39 @@ export function EchoChatbot({
             </div>
 
             {/* Header */}
-            <header className="relative z-20 flex shrink-0 items-center justify-between border-b border-cyan/15 bg-card/40 px-4 py-3 backdrop-blur sm:px-5 sm:py-4">
+            <header
+              className="
+                relative
+                z-20
+                flex
+                shrink-0
+                items-center
+                justify-between
+                border-b
+                border-cyan/15
+                bg-card/40
+                px-4
+                py-3
+                backdrop-blur
+                sm:px-5
+                sm:py-4
+              "
+            >
               <div className="flex min-w-0 items-center gap-3">
-                <div className="relative h-9 w-9 shrink-0 overflow-hidden rounded-full border border-cyan/40 sm:h-10 sm:w-10">
+                <div
+                  className="
+                    relative
+                    h-9
+                    w-9
+                    shrink-0
+                    overflow-hidden
+                    rounded-full
+                    border
+                    border-cyan/40
+                    sm:h-10
+                    sm:w-10
+                  "
+                >
                   <Image
                     src="/assets/echo-avatar.png"
                     alt="ECHO"
@@ -167,11 +271,32 @@ export function EchoChatbot({
                 </div>
 
                 <div className="min-w-0">
-                  <div className="truncate font-display text-xs font-semibold tracking-[0.16em] text-foreground sm:text-sm sm:tracking-[0.25em]">
+                  <div
+                    className="
+                      truncate
+                      font-display
+                      text-xs
+                      font-semibold
+                      tracking-[0.16em]
+                      text-foreground
+                      sm:text-sm
+                      sm:tracking-[0.25em]
+                    "
+                  >
                     ECHO // SIGNAL CHANNEL
                   </div>
 
-                  <div className="flex items-center gap-1.5 font-mono text-[10px] tracking-[0.2em] text-cyan">
+                  <div
+                    className="
+                      flex
+                      items-center
+                      gap-1.5
+                      font-mono
+                      text-[10px]
+                      tracking-[0.2em]
+                      text-cyan
+                    "
+                  >
                     <span className="h-1.5 w-1.5 rounded-full bg-cyan shadow-[0_0_8px_var(--cyan)]" />
                     ONLINE
                   </div>
@@ -183,7 +308,24 @@ export function EchoChatbot({
                 type="button"
                 onClick={handleClose}
                 aria-label="Close signal channel"
-                className="relative z-30 inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-white/5 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan"
+                className="
+                  relative
+                  z-30
+                  inline-flex
+                  h-10
+                  w-10
+                  shrink-0
+                  items-center
+                  justify-center
+                  rounded-full
+                  text-muted-foreground
+                  transition-colors
+                  hover:bg-white/5
+                  hover:text-foreground
+                  focus-visible:outline-none
+                  focus-visible:ring-2
+                  focus-visible:ring-cyan
+                "
               >
                 <X className="h-5 w-5" />
               </button>
@@ -198,10 +340,12 @@ export function EchoChatbot({
                 min-h-0
                 flex-1
                 space-y-4
+                overflow-x-hidden
                 overflow-y-auto
                 overscroll-contain
                 px-4
                 py-5
+                [scrollbar-width:thin]
                 sm:px-5
                 sm:py-6
               "
@@ -276,7 +420,20 @@ export function EchoChatbot({
                 <button
                   type="button"
                   onClick={handleCloseChannel}
-                  className="w-full rounded-full border border-cyan/25 bg-cyan/5 py-3 text-sm font-medium tracking-wide text-cyan transition-colors hover:bg-cyan/10"
+                  className="
+                    w-full
+                    rounded-full
+                    border
+                    border-cyan/25
+                    bg-cyan/5
+                    py-3
+                    text-sm
+                    font-medium
+                    tracking-wide
+                    text-cyan
+                    transition-colors
+                    hover:bg-cyan/10
+                  "
                 >
                   CLOSE CHANNEL
                 </button>

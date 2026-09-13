@@ -13,7 +13,11 @@ const fadeUp = {
   show: (i: number) => ({
     opacity: 1,
     y: 0,
-    transition: { delay: 0.15 + i * 0.12, duration: 0.8, ease: [0.22, 1, 0.36, 1] as const },
+    transition: {
+      delay: 0.15 + i * 0.12,
+      duration: 0.8,
+      ease: [0.22, 1, 0.36, 1] as const,
+    },
   }),
 }
 
@@ -36,7 +40,7 @@ export function Hero({ onOpenChat }: HeroProps) {
         <source src="/videos/echo-hero.mp4" type="video/mp4" />
       </video>
 
-      {/* Layered cinematic overlays — keep ECHO (right) visible, darken the left for text */}
+      {/* Layered cinematic overlays */}
       <div
         aria-hidden
         className="absolute inset-0"
@@ -45,6 +49,7 @@ export function Hero({ onOpenChat }: HeroProps) {
             'linear-gradient(90deg, color-mix(in oklch, var(--background) 92%, transparent) 0%, color-mix(in oklch, var(--background) 68%, transparent) 38%, transparent 72%)',
         }}
       />
+
       <div
         aria-hidden
         className="absolute inset-0"
@@ -53,22 +58,48 @@ export function Hero({ onOpenChat }: HeroProps) {
             'linear-gradient(to top, var(--background) 2%, transparent 30%), radial-gradient(80% 60% at 20% 40%, color-mix(in oklch, var(--violet) 14%, transparent), transparent 60%)',
         }}
       />
+
       <div aria-hidden className="absolute inset-0 grid-noise opacity-40" />
 
       {/* Content — anchored left */}
       <div className="relative z-10 mx-auto w-full max-w-7xl px-6 md:px-10">
         <div className="max-w-2xl">
+          {/* Mobile-friendly signal status */}
           <motion.div
             custom={0}
             variants={fadeUp}
             initial="hidden"
             animate="show"
-            className="mb-6 inline-flex items-center gap-2 rounded-full border border-cyan/30 bg-background/40 px-4 py-1.5 font-mono text-xs tracking-[0.3em] text-cyan backdrop-blur"
+            className="
+              mb-6
+              inline-flex
+              max-w-full
+              items-center
+              gap-1.5
+              rounded-full
+              border
+              border-cyan/30
+              bg-background/40
+              px-2.5
+              py-1
+              font-mono
+              text-[8px]
+              leading-tight
+              tracking-[0.12em]
+              text-cyan
+              backdrop-blur
+              sm:gap-2
+              sm:px-4
+              sm:py-1.5
+              sm:text-xs
+              sm:tracking-[0.3em]
+            "
           >
-            <span className="relative flex h-2 w-2">
+            <span className="relative flex h-1.5 w-1.5 shrink-0 sm:h-2 sm:w-2">
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-cyan opacity-75" />
-              <span className="relative inline-flex h-2 w-2 rounded-full bg-cyan" />
+              <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-cyan sm:h-2 sm:w-2" />
             </span>
+
             SIGNAL GUARDIAN // ONLINE
           </motion.div>
 
@@ -92,8 +123,9 @@ export function Hero({ onOpenChat }: HeroProps) {
             animate="show"
             className="mt-6 max-w-xl text-pretty text-base leading-relaxed text-muted-foreground md:text-lg"
           >
-            Every city has voices that disappear beneath the noise. ECHO listens for the
-            signals that others miss — and turns unheard problems into action.
+            Every city has voices that disappear beneath the noise. ECHO listens
+            for the signals that others miss — and turns unheard problems into
+            action.
           </motion.p>
 
           <motion.div
@@ -107,6 +139,7 @@ export function Hero({ onOpenChat }: HeroProps) {
               SEND YOUR SIGNAL
               <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
             </MagneticButton>
+
             <a href="#scanner" className="inline-block">
               <MagneticButton variant="ghost">
                 DISCOVER ECHO
@@ -127,9 +160,11 @@ export function Hero({ onOpenChat }: HeroProps) {
               <span className="h-1.5 w-1.5 rounded-full bg-cyan shadow-[0_0_8px_var(--cyan)]" />
               SIGNAL SYSTEM ONLINE
             </div>
+
             <div className="glass flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground">
               <span className="tracking-widest">RESONANCE LEVEL</span>
               <span className="text-cyan">98%</span>
+
               <span className="hidden h-1.5 w-24 overflow-hidden rounded-full bg-white/10 sm:block">
                 <span className="block h-full w-[98%] rounded-full bg-gradient-to-r from-cyan to-accent" />
               </span>
@@ -138,7 +173,7 @@ export function Hero({ onOpenChat }: HeroProps) {
         </div>
       </div>
 
-      {/* scanning line */}
+      {/* Scanning line */}
       <div
         aria-hidden
         className="pointer-events-none absolute inset-x-0 top-0 h-px overflow-hidden"
@@ -147,7 +182,8 @@ export function Hero({ onOpenChat }: HeroProps) {
         <div
           className="absolute inset-x-0 h-24 opacity-[0.06]"
           style={{
-            background: 'linear-gradient(to bottom, transparent, var(--cyan), transparent)',
+            background:
+              'linear-gradient(to bottom, transparent, var(--cyan), transparent)',
             animation: 'scanline 7s linear infinite',
           }}
         />
