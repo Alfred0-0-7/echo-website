@@ -2,7 +2,7 @@
 
 import logging
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Response
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -70,3 +70,11 @@ async def unhandled_exception_handler(request: Request, exc: Exception):
 @app.get("/")
 async def root() -> dict:
     return {"status": "ok", "service": settings.APP_NAME}
+
+@app.get("/health")
+@app.head("/health")
+async def health():
+    return Response(
+        content='{"status":"healthy"}',
+        media_type="application/json"
+    )
